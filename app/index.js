@@ -24,13 +24,14 @@ map.addControl(
 );
 
 map.on("load", () => {
-  map.resize();
+
   map.addSource("mapbox-traffic", {
     type: "vector",
     url: "mapbox://mapbox.mapbox-traffic-v1",
   });
+
   map.addLayer({
-    id: "traffic-data",
+    id: "Traffic Data",
     type: "line",
     source: "mapbox-traffic",
     "source-layer": "traffic",
@@ -54,4 +55,76 @@ map.on("load", () => {
       ],
     },
   });
+
+  map.addSource("contours", {
+    type: "vector",
+    url: "mapbox://mapbox.mapbox-terrain-v2"
+  });
+
+  map.addLayer({
+    "id": "Contour Lines",
+    "type": "line",
+    "source": "contours",
+    "source-layer": "contour",
+    "layout": {
+      "visibility": "none",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "paint": {
+      "line-color": "#877b59",
+      "line-width": 1
+    }
+    });
+});
+
+map.on("idle", function () {
+  if (map.getLayer("Traffic Data") && map.getLayer("Contour Lines")) {
+    var toggleableLayerIds = ["Traffic Data", "Contour Lines"];
+    // Set up the corresponding toggle button for each layer.
+    for (var i = 0; i < toggleableLayerIds.length; i++) {
+      var id = toggleableLayerIds[i];
+      if (!document.getElementById(id)) {
+        // Create a link.
+        var link = document.createElement("a");
+        link.id = id;
+        link.href = "#";
+        link.textContent = id;
+        if(id == "Contour Lines"){
+          link.className = "";
+        } else {
+          link.className = "active";
+        }
+        // Show or hide layer when the toggle is clicked.
+        link.onclick = function (e) {
+          var clickedLayer = this.textContent;
+          e.preventDefault();
+          e.stopPropagation();
+          var visibility = map.getLayoutProperty(
+            clickedLayer,
+            "visibility"
+          );
+          // Toggle layer visibility by changing the layout object's visibility property.
+          if (visibility === "visible") {
+            map.setLayoutProperty(
+              clickedLayer,
+              "visibility",
+              "none"
+            );
+            this.className = "";
+          } else {
+            this.className = "active";
+            map.setLayoutProperty(
+              clickedLayer,
+              "visibility",
+              "visible"
+            );
+          }
+        };
+        
+        var layers = document.getElementById("menu");
+        layers.appendChild(link);
+      }
+    }
+  }
 });
